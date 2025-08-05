@@ -45,7 +45,7 @@ type WebSocketPayload = {
      bullshitLevel: number; // A number between 0 and 5, where 0 is no bullshit and 5 is maximum bullshit.
      confidence: number; // Confidence of the determined bullshit level. A number between 0 and 5, where 0 is no confidence and 5 is maximum confidence.
      reasoning: string; // A concise summary of the reasoning behind the determined bullshit level.
-     truth: number; // A concise summary of the actual facts. For statements that are determined to be true or to have a low bullshit level, it is expected that this string will more or less match the statement of fact that was evaluated.
+     truth: string; // A concise summary of the actual facts. For statements that are determined to be true or to have a low bullshit level, it is expected that this string will more or less match the statement of fact that was evaluated.
    };
 }
 ```
