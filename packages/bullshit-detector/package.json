@@ -23,6 +23,8 @@
   "author": "Josh Everett",
   "license": "MIT",
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.0",
+    "@tsconfig/node-ts": "^1.0.4",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
