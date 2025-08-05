@@ -1,18 +1,37 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
+    /* JS syntax & runtime ------------------------------------------ */
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+
+    /* Strictness & correctness ------------------------------------- */
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+
+    /* Code-quality guards ------------------------------------------ */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Interop & ergonomics ---------------------------------------- */
     "esModuleInterop": true,
-    "skipLibCheck": true,
+    "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* Build output ------------------------------------------------- */
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
+    "declarationMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["dist", "node_modules", "**/*.test.ts"]
 }
