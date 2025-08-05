@@ -1,0 +1,39 @@
+{
+  "name": "@josheverett/bullshit-detector",
+  "version": "1.0.0",
+  "description": "Core fact-checking and scoring logic for AI voice applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "fact-checking",
+    "ai",
+    "voice",
+    "bullshit-detection"
+  ],
+  "author": "Josh Everett",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josheverett/claude-playground.git",
+    "directory": "packages/bullshit-detector"
+  }
+}

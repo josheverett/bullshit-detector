@@ -27,8 +27,9 @@ Note: Server-side events could be used instead, but WebSockets are simpler to im
 ### Data Flow
 
 When our custom LLM receives a request to our `/chat/completions` endpoint, it will:
-1. Generate text to be spoken by the Vapi agent
-2. Drive UI states in the client via WebSocket
+1. **Single LLM Call**: Extract factual statements AND evaluate their bullshit levels in one efficient operation
+2. Generate text to be spoken by the Vapi agent
+3. Drive UI states in the client via WebSocket with structured evaluation data
 
 ## WebSocket Payload Structure
 
@@ -52,13 +53,21 @@ type WebSocketPayload = {
 ### Processing Rules
 
 - Payloads must be stringified JSON that is then parsed on the client
-- The LLM must only evaluate one statement of fact at a time
-- If a transcript contains multiple statements of fact, the LLM sends multiple payloads
+- **Single LLM Call Constraint**: The LLM performs fact extraction AND bullshit evaluation in one operation for maximum efficiency
+- If a transcript contains multiple statements of fact, the LLM sends multiple payloads (one per factual claim)
 - Only statements of facts will be considered when determining the bullshit level
 - A single sentence may contain multiple different statements of facts
 - Sentences expressing subjective views may contain factual statements (e.g., "I think X because there are 27 billion people in the world")
-- The LLM's job is to identify non-subjective statements then evaluate their bullshit level
+- The LLM's job is to identify non-subjective statements then evaluate their bullshit level in a single, efficient operation
 
-## Open Questions
+## Implementation Notes
 
-* What public open source packages can we create ahead of time to help us and others with various aspects of our or similar projects?
+### Package Structure
+- **Monorepo with npm workspaces**: All code lives in a single repository for hackathon velocity
+- **`@josheverett/bullshit-detector`**: Core TypeScript package combining fact extraction and evaluation
+- **No separate packages**: vapi-helpers and realtime-ui functionality will be built directly into the main application
+
+### Hackathon Constraints
+- **Single day execution**: All development compressed into one day
+- **Demo-focused**: Optimized for presentation impact over production readiness
+- **Minimal viable features**: Focus on core bullshit detection with basic UI
