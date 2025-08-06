@@ -23,13 +23,17 @@
   "author": "Josh Everett",
   "license": "MIT",
   "devDependencies": {
+    "@jest/globals": "^29.0.0",
     "@tsconfig/node22": "^22.0.0",
     "@tsconfig/node-ts": "^1.0.4",
+    "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
     "jest": "^29.0.0",
+    "jest-environment-node": "^29.0.0",
+    "ts-jest": "^29.0.0",
     "typescript": "5.9.2"
   },
   "dependencies": {
