@@ -5,7 +5,11 @@
  * Uses OpenAI for single-call fact extraction and evaluation.
  */
 
+import { config } from 'dotenv';
 import OpenAI from 'openai';
+
+// Load environment variables from .env file
+config();
 
 export interface BullshitDetectionResult {
   transcript: string;
