@@ -1,10 +1,10 @@
 # @josheverett/bullshit-detector
 
-AI-powered fact-checking and bullshit detection for Node.js applications. Originally developed for a voice AI hackathon project, now available as a generic package for any project requiring LLM-based fact verification.
+AI-powered fact-checking and bullshit detection for Node.js applications. A generic package for any project requiring LLM-based fact verification.
 
 ## Overview
 
-This package provides an efficient way to detect misinformation in text using OpenAI's language models. It extracts multiple factual claims from input text and evaluates each one in a single LLM call for maximum efficiency. Perfect for real-time applications, content moderation, voice AI systems, or any application that needs automated fact-checking.
+This package provides an efficient way to detect misinformation in text using OpenAI's language models. It extracts multiple factual claims from input text and evaluates each one in a single LLM call for maximum efficiency. Perfect for real-time applications, content moderation, or any application that needs automated fact-checking.
 
 ## Features
 
@@ -169,14 +169,14 @@ try {
 
 ## Common Use Cases
 
-### Voice AI Applications
-Perfect for real-time fact-checking during voice conversations, as originally designed for the hackathon project:
+### Real-time Applications
+Perfect for real-time fact-checking in various applications:
 
 ```typescript
-// In a voice AI pipeline
-const transcriptResults = await detectBullshit(userTranscript);
+// In a real-time pipeline
+const transcriptResults = await detectBullshit(userInput);
 if (transcriptResults.some(r => r.bullshitLevel > 3)) {
-  // Send correction to user via TTS
+  // Handle misinformation appropriately
 }
 ```
 
@@ -199,10 +199,6 @@ Help students identify misinformation in texts:
 const analysisResults = await detectBullshit(studentEssay);
 // Show corrections and reasoning to help learning
 ```
-
-## Hackathon Origins
-
-This package was initially developed for an AI voice hackathon focused on real-time bullshit detection in conversations. The single-LLM-call architecture and WebSocket-ready payload structure reflect those original requirements. While now generalized for broader use, it maintains the efficiency and real-time focus that made it hackathon-ready.
 
 ## License
 
