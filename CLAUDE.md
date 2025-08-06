@@ -121,5 +121,6 @@ This creates a decision history that prevents revisiting resolved questions.
 - **Monorepo structure**: Everything lives in npm workspaces, no separate repositories
 - **One-day timeline**: All implementation must fit in single hackathon day
 - **Velocity over quality**: Hacky solutions are preferred if they enable faster demo development
+- **Generic npm packages**: Keep npm packages generic and avoid references to hackathons, specific projects, or historical context in package documentation
 
 This file should be read by Claude at the start of every session to maintain consistent context and avoid repeating rejected approaches.

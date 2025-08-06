@@ -1,7 +1,7 @@
 {
   "name": "@josheverett/bullshit-detector",
   "version": "1.0.0",
-  "description": "Core fact-checking and scoring logic for AI voice applications",
+  "description": "AI-powered fact-checking and bullshit detection for Node.js applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -17,8 +17,8 @@
   "keywords": [
     "fact-checking",
     "ai",
-    "voice",
-    "bullshit-detection"
+    "bullshit-detection",
+    "misinformation"
   ],
   "author": "Josh Everett",
   "license": "MIT",
