@@ -1,4 +1,4 @@
-import { detectBullshit, OpenAIMessage, BullshitDetector } from '../index';
+import { detectBullshit, OpenAIMessage, BullshitDetector, BullshitDetectionConfig } from '../index';
 
 // Integration tests - these make real API calls to OpenAI
 // They require OPENAI_API_KEY to be set in environment
@@ -15,8 +15,12 @@ describe('detectBullshit - Integration Tests', () => {
 
     describe('String input integration tests', () => {
       it('should correctly identify accurate scientific fact', async () => {
-        const result = await detectBullshit('Water boils at 100 degrees Celsius at sea level.');
+        const results = await detectBullshit('Water boils at 100 degrees Celsius at sea level.');
 
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1);
+        
+        const result = results[0];
         expect(result).toMatchObject({
           transcript: 'Water boils at 100 degrees Celsius at sea level.',
           bullshitLevel: expect.any(Number),
@@ -39,8 +43,12 @@ describe('detectBullshit - Integration Tests', () => {
       }, 15000);
 
       it('should correctly identify false information', async () => {
-        const result = await detectBullshit('The sun revolves around the Earth.');
+        const results = await detectBullshit('The sun revolves around the Earth.');
 
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1);
+        
+        const result = results[0];
         expect(result).toMatchObject({
           transcript: 'The sun revolves around the Earth.',
           bullshitLevel: expect.any(Number),
@@ -63,46 +71,61 @@ describe('detectBullshit - Integration Tests', () => {
       }, 15000);
 
       it('should handle ambiguous or opinion-based statements', async () => {
-        const result = await detectBullshit('Pizza is the best food in the world.');
+        const results = await detectBullshit('Pizza is the best food in the world.');
 
-        expect(result).toMatchObject({
-          transcript: 'Pizza is the best food in the world.',
-          bullshitLevel: expect.any(Number),
-          confidence: expect.any(Number),
-          claim: expect.any(String),
-          summary: expect.any(String),
-          reasoning: expect.any(String),
-          truth: expect.any(String),
-        });
+        // Opinion statements might not have factual claims, so array could be empty or have subjective evaluation
+        expect(Array.isArray(results)).toBe(true);
+        
+        if (results.length > 0) {
+          const result = results[0];
+          expect(result).toMatchObject({
+            transcript: 'Pizza is the best food in the world.',
+            bullshitLevel: expect.any(Number),
+            confidence: expect.any(Number),
+            claim: expect.any(String),
+            summary: expect.any(String),
+            reasoning: expect.any(String),
+            truth: expect.any(String),
+          });
 
-        // Should have reasonable confidence bounds for subjective statements
-        expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);
-        expect(result.bullshitLevel).toBeLessThanOrEqual(5);
-        expect(result.confidence).toBeGreaterThanOrEqual(0);
-        expect(result.confidence).toBeLessThanOrEqual(5);
+          // Should have reasonable confidence bounds for subjective statements
+          expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);
+          expect(result.bullshitLevel).toBeLessThanOrEqual(5);
+          expect(result.confidence).toBeGreaterThanOrEqual(0);
+          expect(result.confidence).toBeLessThanOrEqual(5);
+        }
       }, 15000);
 
       it('should handle complex statements with multiple claims', async () => {
-        const result = await detectBullshit('Einstein developed the theory of relativity in 1905, and he also invented the telephone.');
+        const results = await detectBullshit('Einstein developed the theory of relativity in 1905, and he also invented the telephone.');
 
-        expect(result).toMatchObject({
-          transcript: expect.stringContaining('Einstein'),
-          bullshitLevel: expect.any(Number),
-          confidence: expect.any(Number),
-          claim: expect.any(String),
-          summary: expect.any(String),
-          reasoning: expect.any(String),
-          truth: expect.any(String),
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1); // Should detect at least one factual claim
+        
+        // Should have multiple claims detected (Einstein + relativity + telephone invention)
+        expect(results.length).toBeGreaterThanOrEqual(2);
+        
+        results.forEach(result => {
+          expect(result).toMatchObject({
+            transcript: expect.stringContaining('Einstein'),
+            bullshitLevel: expect.any(Number),
+            confidence: expect.any(Number),
+            claim: expect.any(String),
+            summary: expect.any(String),
+            reasoning: expect.any(String),
+            truth: expect.any(String),
+          });
+
+          // Validate numeric ranges
+          expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);
+          expect(result.bullshitLevel).toBeLessThanOrEqual(5);
+          expect(result.confidence).toBeGreaterThanOrEqual(0);
+          expect(result.confidence).toBeLessThanOrEqual(5);
         });
 
-        // Should identify the false claim about the telephone
-        expect(result.bullshitLevel).toBeGreaterThanOrEqual(2);
-
-        // Validate numeric ranges
-        expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);
-        expect(result.bullshitLevel).toBeLessThanOrEqual(5);
-        expect(result.confidence).toBeGreaterThanOrEqual(0);
-        expect(result.confidence).toBeLessThanOrEqual(5);
+        // At least one result should have high bullshit level (telephone claim)
+        const hasFalseClaim = results.some(r => r.bullshitLevel >= 3);
+        expect(hasFalseClaim).toBe(true);
       }, 15000);
     });
 
@@ -114,8 +137,12 @@ describe('detectBullshit - Integration Tests', () => {
           { role: 'user', content: 'World War II ended in 1945.' }
         ];
 
-        const result = await detectBullshit(messages);
+        const results = await detectBullshit(messages);
 
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1);
+        
+        const result = results[0];
         expect(result).toMatchObject({
           transcript: 'World War II ended in 1945.',
           bullshitLevel: expect.any(Number),
@@ -144,8 +171,12 @@ describe('detectBullshit - Integration Tests', () => {
           { role: 'user', content: 'Mars is closer to the sun than Mercury.' }
         ];
 
-        const result = await detectBullshit(messages);
+        const results = await detectBullshit(messages);
 
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1);
+        
+        const result = results[0];
         expect(result).toMatchObject({
           transcript: 'Mars is closer to the sun than Mercury.',
           bullshitLevel: expect.any(Number),
@@ -174,10 +205,49 @@ describe('detectBullshit - Integration Tests', () => {
           { role: 'user', content: 'That\'s great to hear!' }
         ];
 
-        const result = await detectBullshit(messages);
+        const results = await detectBullshit(messages);
 
+        // Social conversation might not have factual claims, so array could be empty
+        expect(Array.isArray(results)).toBe(true);
+        
+        if (results.length > 0) {
+          const result = results[0];
+          expect(result).toMatchObject({
+            transcript: expect.any(String),
+            bullshitLevel: expect.any(Number),
+            confidence: expect.any(Number),
+            claim: expect.any(String),
+            summary: expect.any(String),
+            reasoning: expect.any(String),
+            truth: expect.any(String),
+          });
+
+          // Should have low bullshit level and possibly lower confidence for non-factual content
+          expect(result.bullshitLevel).toBeLessThanOrEqual(2);
+
+          // Validate numeric ranges
+          expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);
+          expect(result.bullshitLevel).toBeLessThanOrEqual(5);
+          expect(result.confidence).toBeGreaterThanOrEqual(0);
+          expect(result.confidence).toBeLessThanOrEqual(5);
+        }
+      }, 15000);
+
+      it('should work with custom configuration', async () => {
+        const config: BullshitDetectionConfig = {
+          model: 'gpt-4o-mini', // Use same model but different config
+          temperature: 0.2,
+          maxTokens: 800
+        };
+
+        const results = await detectBullshit('The Great Wall of China is visible from space.', config);
+
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBeGreaterThanOrEqual(1);
+        
+        const result = results[0];
         expect(result).toMatchObject({
-          transcript: expect.any(String),
+          transcript: expect.stringContaining('Great Wall'),
           bullshitLevel: expect.any(Number),
           confidence: expect.any(Number),
           claim: expect.any(String),
@@ -186,8 +256,8 @@ describe('detectBullshit - Integration Tests', () => {
           truth: expect.any(String),
         });
 
-        // Should have low bullshit level and possibly lower confidence for non-factual content
-        expect(result.bullshitLevel).toBeLessThanOrEqual(2);
+        // This is a common myth - should have moderate to high bullshit level
+        expect(result.bullshitLevel).toBeGreaterThanOrEqual(2);
 
         // Validate numeric ranges
         expect(result.bullshitLevel).toBeGreaterThanOrEqual(0);

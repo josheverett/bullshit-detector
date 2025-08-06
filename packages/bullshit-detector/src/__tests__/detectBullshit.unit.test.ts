@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { detectBullshit, OpenAIMessage, BullshitDetectionResult } from '../index';
+import { detectBullshit, OpenAIMessage, BullshitDetectionResult, BullshitDetectionConfig } from '../index';
 
 // Mock OpenAI
 const mockCreate = jest.fn();
@@ -27,7 +27,7 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'Water freezes at 0 degrees Celsius.',
               claim: 'Water freezes at 0 degrees Celsius',
               summary: 'Statement about water freezing temperature',
@@ -35,7 +35,7 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: 5,
               reasoning: 'This is a well-established scientific fact',
               truth: 'Water does indeed freeze at 0 degrees Celsius under standard atmospheric pressure'
-            })
+            }])
           }
         }]
       };
@@ -44,7 +44,8 @@ describe('detectBullshit - Unit Tests', () => {
 
       const result = await detectBullshit('Water freezes at 0 degrees Celsius.');
 
-      expect(result).toEqual({
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
         transcript: 'Water freezes at 0 degrees Celsius.',
         claim: 'Water freezes at 0 degrees Celsius',
         summary: 'Statement about water freezing temperature',
@@ -62,7 +63,7 @@ describe('detectBullshit - Unit Tests', () => {
           { role: 'user', content: 'Water freezes at 0 degrees Celsius.' }
         ],
         temperature: 0.1,
-        max_tokens: 1000,
+        max_tokens: 1500,
       });
     });
 
@@ -70,7 +71,7 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'The Earth is flat and scientists are lying about it.',
               claim: 'The Earth is flat',
               summary: 'Claim about Earth being flat',
@@ -78,7 +79,7 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: 5,
               reasoning: 'This contradicts overwhelming scientific evidence that Earth is spherical',
               truth: 'The Earth is an oblate spheroid, not flat, as proven by extensive scientific evidence'
-            })
+            }])
           }
         }]
       };
@@ -87,9 +88,10 @@ describe('detectBullshit - Unit Tests', () => {
 
       const result = await detectBullshit('The Earth is flat and scientists are lying about it.');
 
-      expect(result.bullshitLevel).toBe(5);
-      expect(result.confidence).toBe(5);
-      expect(result.reasoning).toContain('contradicts overwhelming scientific evidence');
+      expect(result).toHaveLength(1);
+      expect(result[0].bullshitLevel).toBe(5);
+      expect(result[0].confidence).toBe(5);
+      expect(result[0].reasoning).toContain('contradicts overwhelming scientific evidence');
     });
   });
 
@@ -98,7 +100,7 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'The moon landing was fake.',
               claim: 'The moon landing was fake',
               summary: 'Claim that moon landing was staged',
@@ -106,7 +108,7 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: 4,
               reasoning: 'This is a well-debunked conspiracy theory with no credible evidence',
               truth: 'The Apollo moon landings were real, well-documented historical events'
-            })
+            }])
           }
         }]
       };
@@ -121,8 +123,9 @@ describe('detectBullshit - Unit Tests', () => {
 
       const result = await detectBullshit(messages);
 
-      expect(result.bullshitLevel).toBe(4);
-      expect(result.claim).toBe('The moon landing was fake');
+      expect(result).toHaveLength(1);
+      expect(result[0].bullshitLevel).toBe(4);
+      expect(result[0].claim).toBe('The moon landing was fake');
 
       // Verify the messages were formatted correctly
       expect(mockCreate).toHaveBeenCalledWith({
@@ -134,7 +137,7 @@ describe('detectBullshit - Unit Tests', () => {
           { role: 'user', content: 'The moon landing was fake.' }
         ],
         temperature: 0.1,
-        max_tokens: 1000,
+        max_tokens: 1500,
       });
     });
 
@@ -142,15 +145,7 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
-              transcript: '',
-              claim: 'No factual claims found',
-              summary: 'Empty conversation',
-              bullshitLevel: 0,
-              confidence: 1,
-              reasoning: 'No content to evaluate',
-              truth: 'No claims to verify'
-            })
+            content: JSON.stringify([])
           }
         }]
       };
@@ -158,7 +153,7 @@ describe('detectBullshit - Unit Tests', () => {
       mockCreate.mockResolvedValueOnce(mockResponse);
 
       const result = await detectBullshit([]);
-      expect(result).toBeDefined();
+      expect(result).toEqual([]);
     });
   });
 
@@ -205,24 +200,24 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'test',
               // missing other required fields
-            })
+            }])
           }
         }]
       };
 
       mockCreate.mockResolvedValueOnce(mockResponse);
 
-      await expect(detectBullshit('test')).rejects.toThrow('Missing required field in response');
+      await expect(detectBullshit('test')).rejects.toThrow('Missing required field in response[0]');
     });
 
     it('should throw error when bullshitLevel is out of range', async () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'test',
               claim: 'test claim',
               summary: 'test summary',
@@ -230,21 +225,21 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: 3,
               reasoning: 'test reasoning',
               truth: 'test truth'
-            })
+            }])
           }
         }]
       };
 
       mockCreate.mockResolvedValueOnce(mockResponse);
 
-      await expect(detectBullshit('test')).rejects.toThrow('Invalid bullshitLevel: 10 (must be 0-5)');
+      await expect(detectBullshit('test')).rejects.toThrow('Invalid bullshitLevel in response[0]: 10 (must be 0-5)');
     });
 
     it('should throw error when confidence is out of range', async () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'test',
               claim: 'test claim',
               summary: 'test summary',
@@ -252,14 +247,88 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: -1, // Invalid - should be 0-5
               reasoning: 'test reasoning',
               truth: 'test truth'
-            })
+            }])
           }
         }]
       };
 
       mockCreate.mockResolvedValueOnce(mockResponse);
 
-      await expect(detectBullshit('test')).rejects.toThrow('Invalid confidence: -1 (must be 0-5)');
+      await expect(detectBullshit('test')).rejects.toThrow('Invalid confidence in response[0]: -1 (must be 0-5)');
+    });
+  });
+
+  describe('Configuration tests', () => {
+    it('should use custom configuration options', async () => {
+      const mockResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify([{
+              transcript: 'Test transcript',
+              claim: 'Test claim',
+              summary: 'Test summary',
+              bullshitLevel: 2,
+              confidence: 4,
+              reasoning: 'Test reasoning',
+              truth: 'Test truth'
+            }])
+          }
+        }]
+      };
+
+      mockCreate.mockResolvedValueOnce(mockResponse);
+
+      const config: BullshitDetectionConfig = {
+        model: 'gpt-4o',
+        temperature: 0.3,
+        maxTokens: 2000
+      };
+
+      await detectBullshit('Test input', config);
+
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: 'gpt-4o',
+        messages: expect.any(Array),
+        temperature: 0.3,
+        max_tokens: 2000,
+      });
+    });
+
+    it('should handle multiple claims in response', async () => {
+      const mockResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify([
+              {
+                transcript: 'The Earth is flat and water boils at 50C.',
+                claim: 'The Earth is flat',
+                summary: 'Claims about Earth and water',
+                bullshitLevel: 5,
+                confidence: 5,
+                reasoning: 'Earth is spherical',
+                truth: 'Earth is an oblate spheroid'
+              },
+              {
+                transcript: 'The Earth is flat and water boils at 50C.',
+                claim: 'Water boils at 50C',
+                summary: 'Claims about Earth and water',
+                bullshitLevel: 4,
+                confidence: 5,
+                reasoning: 'Water boils at 100C at standard pressure',
+                truth: 'Water boils at 100 degrees Celsius at standard atmospheric pressure'
+              }
+            ])
+          }
+        }]
+      };
+
+      mockCreate.mockResolvedValueOnce(mockResponse);
+
+      const result = await detectBullshit('The Earth is flat and water boils at 50C.');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].claim).toBe('The Earth is flat');
+      expect(result[1].claim).toBe('Water boils at 50C');
     });
   });
 
@@ -270,7 +339,7 @@ describe('detectBullshit - Unit Tests', () => {
       const mockResponse = {
         choices: [{
           message: {
-            content: JSON.stringify({
+            content: JSON.stringify([{
               transcript: 'Test transcript',
               claim: 'Test claim',
               summary: 'Test summary',
@@ -278,7 +347,7 @@ describe('detectBullshit - Unit Tests', () => {
               confidence: 4,
               reasoning: 'Test reasoning',
               truth: 'Test truth'
-            })
+            }])
           }
         }]
       };
@@ -295,6 +364,63 @@ describe('detectBullshit - Unit Tests', () => {
         reasoning: 'Test reasoning',
         truth: 'Test truth'
       });
+    });
+
+    it('should handle empty results array in evaluateClaim', async () => {
+      const mockResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify([])
+          }
+        }]
+      };
+
+      mockCreate.mockResolvedValueOnce(mockResponse);
+
+      const { BullshitDetector } = require('../index');
+      const detector = new BullshitDetector();
+      
+      await expect(detector.evaluateClaim('No factual claims here')).rejects.toThrow('No factual claims found in input');
+    });
+
+    it('should support analyzeTranscript with multiple results', async () => {
+      const { BullshitDetector } = require('../index');
+
+      const mockResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify([
+              {
+                transcript: 'Multiple claims here',
+                claim: 'First claim',
+                summary: 'Test summary',
+                bullshitLevel: 2,
+                confidence: 4,
+                reasoning: 'First reasoning',
+                truth: 'First truth'
+              },
+              {
+                transcript: 'Multiple claims here',
+                claim: 'Second claim',
+                summary: 'Test summary',
+                bullshitLevel: 3,
+                confidence: 3,
+                reasoning: 'Second reasoning',
+                truth: 'Second truth'
+              }
+            ])
+          }
+        }]
+      };
+
+      mockCreate.mockResolvedValueOnce(mockResponse);
+
+      const detector = new BullshitDetector();
+      const result = await detector.analyzeTranscript('Multiple claims here');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].claim).toBe('First claim');
+      expect(result[1].claim).toBe('Second claim');
     });
   });
 });
