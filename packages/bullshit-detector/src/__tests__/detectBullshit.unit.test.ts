@@ -57,7 +57,7 @@ describe('detectBullshit - Unit Tests', () => {
 
       // Verify OpenAI was called with correct parameters
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-4o-mini',
+        model: 'o3',
         messages: [
           { role: 'system', content: expect.stringContaining('You are a fact-checking AI') },
           { role: 'user', content: 'Water freezes at 0 degrees Celsius.' }
@@ -129,7 +129,7 @@ describe('detectBullshit - Unit Tests', () => {
 
       // Verify the messages were formatted correctly
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-4o-mini',
+        model: 'o3',
         messages: [
           { role: 'system', content: expect.stringContaining('You are a fact-checking AI that analyzes conversations') },
           { role: 'user', content: 'Did we really land on the moon?' },
