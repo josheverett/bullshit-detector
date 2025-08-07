@@ -1,28 +1,38 @@
 import { detectBullshit, OpenAIMessage, BullshitDetector, BullshitDetectionConfig } from '../index';
+import { LLMEvaluator, createCriteria } from './llmEvaluator';
 
 // Integration tests - these make real API calls to OpenAI
 // They require OPENAI_API_KEY to be set in environment
 describe('detectBullshit - Integration Tests', () => {
   // Skip tests if no API key is available
   const skipIfNoApiKey = process.env.OPENAI_API_KEY ? describe : describe.skip;
+  
+  let llmEvaluator: LLMEvaluator;
 
   skipIfNoApiKey('Live API calls', () => {
     beforeAll(() => {
       if (!process.env.OPENAI_API_KEY) {
         console.warn('OPENAI_API_KEY not set - skipping integration tests');
       }
+      try {
+        llmEvaluator = new LLMEvaluator();
+      } catch (error) {
+        console.warn('LLM Evaluator initialization failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn('Tests will run without LLM evaluation');
+      }
     });
 
     describe('String input integration tests', () => {
       it('should correctly identify accurate scientific fact', async () => {
-        const results = await detectBullshit('Water boils at 100 degrees Celsius at sea level.');
+        const inputClaim = 'Water boils at 100 degrees Celsius at sea level.';
+        const results = await detectBullshit(inputClaim);
 
         expect(Array.isArray(results)).toBe(true);
         expect(results.length).toBeGreaterThanOrEqual(1);
         
         const result = results[0];
         expect(result).toMatchObject({
-          transcript: 'Water boils at 100 degrees Celsius at sea level.',
+          transcript: inputClaim,
           bullshitLevel: expect.any(Number),
           confidence: expect.any(Number),
           claim: expect.any(String),
@@ -40,17 +50,37 @@ describe('detectBullshit - Integration Tests', () => {
         expect(result.bullshitLevel).toBeLessThanOrEqual(5);
         expect(result.confidence).toBeGreaterThanOrEqual(0);
         expect(result.confidence).toBeLessThanOrEqual(5);
-      }, 15000);
+
+        // LLM Evaluator validation
+        if (llmEvaluator) {
+          const evaluation = await llmEvaluator.evaluateResults(
+            inputClaim, 
+            results, 
+            createCriteria.truthfulClaim()
+          );
+          
+          console.log(`LLM Evaluation - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
+          console.log(`Reasoning: ${evaluation.reasoning}`);
+          if (evaluation.suggestions) {
+            console.log(`Suggestions: ${evaluation.suggestions}`);
+          }
+          
+          // Test should pass according to LLM evaluator (with some tolerance for edge cases)
+          expect(evaluation.score).toBeGreaterThanOrEqual(4);
+          expect(evaluation.passed).toBe(true);
+        }
+      }, 25000);
 
       it('should correctly identify false information', async () => {
-        const results = await detectBullshit('The sun revolves around the Earth.');
+        const inputClaim = 'The sun revolves around the Earth.';
+        const results = await detectBullshit(inputClaim);
 
         expect(Array.isArray(results)).toBe(true);
         expect(results.length).toBeGreaterThanOrEqual(1);
         
         const result = results[0];
         expect(result).toMatchObject({
-          transcript: 'The sun revolves around the Earth.',
+          transcript: inputClaim,
           bullshitLevel: expect.any(Number),
           confidence: expect.any(Number),
           claim: expect.any(String),
@@ -68,10 +98,30 @@ describe('detectBullshit - Integration Tests', () => {
         expect(result.bullshitLevel).toBeLessThanOrEqual(5);
         expect(result.confidence).toBeGreaterThanOrEqual(0);
         expect(result.confidence).toBeLessThanOrEqual(5);
-      }, 15000);
+
+        // LLM Evaluator validation
+        if (llmEvaluator) {
+          const evaluation = await llmEvaluator.evaluateResults(
+            inputClaim, 
+            results, 
+            createCriteria.falseInformation()
+          );
+          
+          console.log(`LLM Evaluation - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
+          console.log(`Reasoning: ${evaluation.reasoning}`);
+          if (evaluation.suggestions) {
+            console.log(`Suggestions: ${evaluation.suggestions}`);
+          }
+          
+          // Test should pass according to LLM evaluator
+          expect(evaluation.score).toBeGreaterThanOrEqual(4);
+          expect(evaluation.passed).toBe(true);
+        }
+      }, 25000);
 
       it('should handle ambiguous or opinion-based statements', async () => {
-        const results = await detectBullshit('Pizza is the best food in the world.');
+        const inputClaim = 'Pizza is the best food in the world.';
+        const results = await detectBullshit(inputClaim);
 
         // Opinion statements might not have factual claims, so array could be empty or have subjective evaluation
         expect(Array.isArray(results)).toBe(true);
@@ -79,7 +129,7 @@ describe('detectBullshit - Integration Tests', () => {
         if (results.length > 0) {
           const result = results[0];
           expect(result).toMatchObject({
-            transcript: 'Pizza is the best food in the world.',
+            transcript: inputClaim,
             bullshitLevel: expect.any(Number),
             confidence: expect.any(Number),
             claim: expect.any(String),
@@ -93,11 +143,36 @@ describe('detectBullshit - Integration Tests', () => {
           expect(result.bullshitLevel).toBeLessThanOrEqual(5);
           expect(result.confidence).toBeGreaterThanOrEqual(0);
           expect(result.confidence).toBeLessThanOrEqual(5);
+
+          // LLM Evaluator validation for ambiguous statements
+          if (llmEvaluator) {
+            const evaluation = await llmEvaluator.evaluateResults(
+              inputClaim, 
+              results, 
+              createCriteria.ambiguousStatement()
+            );
+            
+            console.log(`LLM Evaluation - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
+            console.log(`Reasoning: ${evaluation.reasoning}`);
+            
+            // Should be more lenient for opinion-based statements
+            expect(evaluation.score).toBeGreaterThanOrEqual(3);
+            expect(evaluation.passed).toBe(true);
+          }
+        } else if (llmEvaluator) {
+          // If no results, evaluate the empty array response
+          const evaluation = await llmEvaluator.evaluateResults(inputClaim, results, {});
+          console.log(`LLM Evaluation (no results) - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
+          console.log(`Reasoning: ${evaluation.reasoning}`);
+          
+          // Empty results might be acceptable for pure opinion statements
+          expect(evaluation.score).toBeGreaterThanOrEqual(2);
         }
-      }, 15000);
+      }, 25000);
 
       it('should handle complex statements with multiple claims', async () => {
-        const results = await detectBullshit('Einstein developed the theory of relativity in 1905, and he also invented the telephone.');
+        const inputClaim = 'Einstein developed the theory of relativity in 1905, and he also invented the telephone.';
+        const results = await detectBullshit(inputClaim);
 
         expect(Array.isArray(results)).toBe(true);
         expect(results.length).toBeGreaterThanOrEqual(1); // Should detect at least one factual claim
@@ -126,7 +201,23 @@ describe('detectBullshit - Integration Tests', () => {
         // At least one result should have high bullshit level (telephone claim)
         const hasFalseClaim = results.some(r => r.bullshitLevel >= 3);
         expect(hasFalseClaim).toBe(true);
-      }, 15000);
+
+        // LLM Evaluator validation for multiple claims
+        if (llmEvaluator) {
+          const evaluation = await llmEvaluator.evaluateResults(
+            inputClaim, 
+            results, 
+            { allowableVariance: 1 }
+          );
+          
+          console.log(`LLM Evaluation (${results.length} claims) - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
+          console.log(`Reasoning: ${evaluation.reasoning}`);
+          
+          // Should correctly identify both true and false claims
+          expect(evaluation.score).toBeGreaterThanOrEqual(4);
+          expect(evaluation.passed).toBe(true);
+        }
+      }, 25000);
     });
 
     describe('OpenAI message input integration tests', () => {
