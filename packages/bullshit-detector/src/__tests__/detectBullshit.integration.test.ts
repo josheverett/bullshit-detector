@@ -326,7 +326,7 @@ describe('detectBullshit - Integration Tests', () => {
 
       it('should work with custom configuration', async () => {
         const config: BullshitDetectionConfig = {
-          model: 'o3', // Use same model but different config
+          model: 'gpt-4o-mini', // Use same model but different config
           temperature: 0.2,
           maxTokens: 800
         };

@@ -122,7 +122,7 @@ interface BullshitDetectionResult {
 
 ```typescript
 interface BullshitDetectionConfig {
-  model?: string;         // OpenAI model to use (default: 'o3')
+  model?: string;         // OpenAI model to use (default: 'gpt-4o-mini')
   temperature?: number;   // Temperature for LLM calls (default: 0.1)
   maxTokens?: number;    // Maximum tokens in response (default: 1500)
 }

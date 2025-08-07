@@ -54,7 +54,7 @@ export interface WikipediaConfig {
 }
 
 export interface BullshitDetectionConfig {
-  model?: string; // OpenAI model to use (defaults to 'o3')
+  model?: string; // OpenAI model to use (defaults to 'gpt-4o-mini')
   temperature?: number; // Temperature for LLM calls (defaults to 0.1)
   maxTokens?: number; // Maximum tokens in response (defaults to 1500)
   
@@ -345,7 +345,7 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
 
   // Apply default configuration
   const {
-    model = 'o3',
+    model = 'gpt-4o-mini',
     temperature = 0.1,
     maxTokens = 1500,
     hybridStrategy = 'llm_only'
