@@ -88,7 +88,7 @@ Please respond with a JSON object in this exact format:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'o3',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -218,7 +218,7 @@ Please respond with a JSON object in this exact format:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'o3',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
