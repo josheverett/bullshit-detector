@@ -54,8 +54,8 @@ export interface WikipediaConfig {
 }
 
 export interface BullshitDetectionConfig {
-  model?: string; // OpenAI model to use (defaults to 'gpt-4o-mini')
-  temperature?: number; // Temperature for LLM calls (defaults to 0.1)
+  model?: string; // OpenAI model to use (defaults to 'gpt-4.1-2025-04-14')
+  temperature?: number; // Temperature for LLM calls (defaults to 0)
   maxTokens?: number; // Maximum tokens in response (defaults to 1500)
 
   // External fact-checking APIs (all disabled by default)
@@ -339,21 +339,21 @@ async function enhanceWithExternalAPIs(claim: string, config: BullshitDetectionC
  * @returns Promise resolving to array of bullshit detection results (one per factual claim)
  */
 export async function detectBullshit(input: string | OpenAIMessage[], config: BullshitDetectionConfig = {}): Promise<BullshitDetectionResult[]> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY environment variable is required');
+  }
+
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
   // Apply default configuration
   const {
-    model = 'gpt-4o-mini',
-    temperature = 0.1,
+    model = 'gpt-4.1-2025-04-14',
+    temperature = 0,
     maxTokens = 1500,
     hybridStrategy = 'llm_only'
   } = config;
-
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY environment variable is required');
-  }
 
   try {
     let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
@@ -377,7 +377,7 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
       model,
       messages,
       temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -430,41 +430,48 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
           }
 
           // Adjust confidence and bullshit level based on strategy
-          if (hybridStrategy === 'api_enhanced' && enhancement.aggregatedConfidence > 0) {
-            // Use external sources to enhance LLM confidence
-            const externalWeight = 0.3; // External APIs contribute 30% to final confidence
-            const llmWeight = 0.7;
+          if (hybridStrategy === 'api_enhanced') {
+            if (enhancement.aggregatedConfidence > 0) {
+              // Use external sources to enhance LLM confidence
+              const externalWeight = 0.3; // External APIs contribute 30% to final confidence
+              const llmWeight = 0.7;
 
-            finalResult.confidence = Math.min(5,
-              (finalResult.confidence * llmWeight) + (enhancement.aggregatedConfidence * 5 * externalWeight)
-            );
+              finalResult.confidence = Math.min(5,
+                (finalResult.confidence * llmWeight) + (enhancement.aggregatedConfidence * 5 * externalWeight)
+              );
 
-            // If external sources strongly disagree with LLM, adjust reasoning
-            if (enhancement.externalSources.some(source => source.rating?.toLowerCase().includes('false') || source.rating?.toLowerCase().includes('misleading'))) {
-              if (finalResult.bullshitLevel < 3) {
-                finalResult.reasoning += ' However, external fact-checkers have flagged this claim as potentially problematic.';
-                finalResult.bullshitLevel = Math.min(5, finalResult.bullshitLevel + 1);
+              // If external sources strongly disagree with LLM, adjust reasoning
+              if (enhancement.externalSources.some(source => source.rating?.toLowerCase().includes('false') || source.rating?.toLowerCase().includes('misleading'))) {
+                if (finalResult.bullshitLevel < 3) {
+                  finalResult.reasoning += ' However, external fact-checkers have flagged this claim as potentially problematic.';
+                  finalResult.bullshitLevel = Math.min(5, finalResult.bullshitLevel + 1);
+                }
               }
             }
-
             finalResult.detectionMethod = 'llm_with_api_enhancement';
           } else if (hybridStrategy === 'api_first') {
-            // TODO: Could implement API-first strategy in future if needed
-            finalResult.detectionMethod = 'llm_with_api_enhancement';
-          }
-
-          // If no enhancement method was set, default to LLM only
-          if (!finalResult.detectionMethod) {
+            // For api_first, fall back to LLM with a specific fallback method
+            finalResult.detectionMethod = 'api_first_with_llm_fallback';
+          } else {
             finalResult.detectionMethod = 'llm_only';
           }
 
           enhancedResults.push(finalResult);
         } catch (enhancementError) {
-          // If enhancement fails, fall back to LLM-only result
+          // If enhancement fails, fall back to LLM-only result with appropriate detection method
           console.warn('External API enhancement failed for claim:', result.claim, enhancementError);
+          let fallbackMethod: string;
+          if (hybridStrategy === 'api_enhanced') {
+            fallbackMethod = 'llm_with_api_enhancement';
+          } else if (hybridStrategy === 'api_first') {
+            fallbackMethod = 'api_first_with_llm_fallback';
+          } else {
+            fallbackMethod = 'llm_only';
+          }
+
           enhancedResults.push({
             ...result,
-            detectionMethod: 'llm_only'
+            detectionMethod: fallbackMethod
           });
         }
       }

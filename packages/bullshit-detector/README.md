@@ -69,8 +69,8 @@ console.log(result);
 import { detectBullshit, BullshitDetectionConfig } from '@josheverett/bullshit-detector';
 
 const config: BullshitDetectionConfig = {
-  model: 'gpt-4o',           // Use a more powerful model
-  temperature: 0.2,          // Slightly more creative responses
+  model: 'gpt-4.1-2025-04-14', // Use the latest model
+  temperature: 1,            // Model default temperature
   maxTokens: 2000           // Allow longer responses
 };
 
@@ -122,8 +122,8 @@ interface BullshitDetectionResult {
 
 ```typescript
 interface BullshitDetectionConfig {
-  model?: string;         // OpenAI model to use (default: 'gpt-4o-mini')
-  temperature?: number;   // Temperature for LLM calls (default: 0.1)
+  model?: string;         // OpenAI model to use (default: 'gpt-4.1-2025-04-14')
+  temperature?: number;   // Temperature for LLM calls (default: 0)
   maxTokens?: number;    // Maximum tokens in response (default: 1500)
 }
 ```

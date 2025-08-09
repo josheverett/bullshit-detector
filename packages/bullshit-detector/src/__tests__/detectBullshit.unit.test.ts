@@ -54,18 +54,19 @@ describe('detectBullshit - Unit Tests', () => {
         bullshitLevel: 0,
         confidence: 5,
         reasoning: 'This is a well-established scientific fact',
-        truth: 'Water does indeed freeze at 0 degrees Celsius under standard atmospheric pressure'
+        truth: 'Water does indeed freeze at 0 degrees Celsius under standard atmospheric pressure',
+        detectionMethod: 'llm_only'
       });
 
       // Verify OpenAI was called with correct parameters
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: expect.stringContaining('You are a fact-checking AI') },
           { role: 'user', content: 'Water freezes at 0 degrees Celsius.' }
         ],
-        temperature: 0.1,
-        max_tokens: 1500,
+        temperature: 0,
+        max_completion_tokens: 1500,
       });
     });
 
@@ -131,15 +132,15 @@ describe('detectBullshit - Unit Tests', () => {
 
       // Verify the messages were formatted correctly
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: expect.stringContaining('You are a fact-checking AI that analyzes conversations') },
           { role: 'user', content: 'Did we really land on the moon?' },
           { role: 'assistant', content: 'Yes, the Apollo missions successfully landed on the moon.' },
           { role: 'user', content: 'The moon landing was fake.' }
         ],
-        temperature: 0.1,
-        max_tokens: 1500,
+        temperature: 0,
+        max_completion_tokens: 1500,
       });
     });
 
@@ -281,7 +282,7 @@ describe('detectBullshit - Unit Tests', () => {
       mockCreate.mockResolvedValueOnce(mockResponse);
 
       const config: BullshitDetectionConfig = {
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         temperature: 0.3,
         maxTokens: 2000
       };
@@ -289,10 +290,10 @@ describe('detectBullshit - Unit Tests', () => {
       await detectBullshit('Test input', config);
 
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         messages: expect.any(Array),
         temperature: 0.3,
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
       });
     });
 
@@ -336,7 +337,7 @@ describe('detectBullshit - Unit Tests', () => {
 
   describe('Legacy class interface tests', () => {
     it('should support BullshitDetector class for backward compatibility', async () => {
-      const { BullshitDetector } = require('../index');
+      const { BullshitDetector } = await import('../index.js');
 
       const mockResponse = {
         choices: [{
@@ -379,14 +380,14 @@ describe('detectBullshit - Unit Tests', () => {
 
       mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const { BullshitDetector } = require('../index');
+      const { BullshitDetector } = await import('../index.js');
       const detector = new BullshitDetector();
-      
+
       await expect(detector.evaluateClaim('No factual claims here')).rejects.toThrow('No factual claims found in input');
     });
 
     it('should support analyzeTranscript with multiple results', async () => {
-      const { BullshitDetector } = require('../index');
+      const { BullshitDetector } = await import('../index.js');
 
       const mockResponse = {
         choices: [{

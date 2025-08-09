@@ -1,6 +1,6 @@
 /**
  * LLM Evaluator for Integration Tests
- * 
+ *
  * This utility uses OpenAI's GPT to evaluate if integration test results are acceptable.
  * It's designed to be fair-but-lenient, understanding that LLM outputs can vary while
  * still being correct and useful.
@@ -25,7 +25,7 @@ interface EvaluationCriteria {
 
 export class LLMEvaluator {
   private openai: OpenAI;
-  
+
   constructor() {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is required for LLM evaluator');
@@ -88,13 +88,13 @@ Please respond with a JSON object in this exact format:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'o3',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.2,
-        max_tokens: 800
+        temperature: 1,
+        max_completion_tokens: 800
       });
 
       const content = response.choices[0]?.message?.content;
@@ -109,9 +109,9 @@ Please respond with a JSON object in this exact format:
       }
 
       const evaluation = JSON.parse(jsonMatch[0]) as EvaluationResult;
-      
+
       // Validate the response structure
-      if (typeof evaluation.passed !== 'boolean' || 
+      if (typeof evaluation.passed !== 'boolean' ||
           typeof evaluation.score !== 'number' ||
           typeof evaluation.reasoning !== 'string') {
         throw new Error('Invalid evaluation response structure');
@@ -120,7 +120,7 @@ Please respond with a JSON object in this exact format:
       return evaluation;
     } catch (error) {
       console.warn('LLM Evaluator failed:', error instanceof Error ? error.message : 'Unknown error');
-      
+
       // Fallback evaluation - be lenient and pass unless obviously wrong
       return {
         passed: this.fallbackEvaluation(result, criteria),
@@ -136,7 +136,7 @@ Please respond with a JSON object in this exact format:
     if (result.bullshitLevel < 0 || result.bullshitLevel > 5) return false;
     if (result.confidence < 0 || result.confidence > 5) return false;
     if (!result.claim || !result.reasoning || !result.truth) return false;
-    
+
     // Check basic criteria if provided
     if (criteria.expectedBullshitLevelRange) {
       const [min, max] = criteria.expectedBullshitLevelRange;
@@ -145,7 +145,7 @@ Please respond with a JSON object in this exact format:
         return false;
       }
     }
-    
+
     if (criteria.expectedConfidenceRange) {
       const [min, max] = criteria.expectedConfidenceRange;
       const variance = criteria.allowableVariance || 1;
@@ -153,7 +153,7 @@ Please respond with a JSON object in this exact format:
         return false;
       }
     }
-    
+
     return true; // Pass by default in fallback mode
   }
 
@@ -189,7 +189,7 @@ EVALUATION GUIDELINES:
 SCORING CRITERIA (0-10 scale):
 - 8-10: Excellent coverage of claims with accurate assessments
 - 6-7: Good coverage with minor issues
-- 4-5: Acceptable but missed some important claims or had notable issues  
+- 4-5: Acceptable but missed some important claims or had notable issues
 - 2-3: Poor coverage or significant accuracy issues
 - 0-1: Completely incorrect or missed all important claims`;
 
@@ -218,13 +218,13 @@ Please respond with a JSON object in this exact format:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'o3',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.2,
-        max_tokens: 1000
+        temperature: 1,
+        max_completion_tokens: 1000
       });
 
       const content = response.choices[0]?.message?.content;
@@ -239,13 +239,13 @@ Please respond with a JSON object in this exact format:
 
       const evaluation = JSON.parse(jsonMatch[0]) as EvaluationResult;
       return evaluation;
-      
+
     } catch (error) {
       console.warn('LLM Evaluator failed for multiple results:', error instanceof Error ? error.message : 'Unknown error');
-      
+
       // Fallback - check if all results pass basic validation
       const allValid = results.every(result => this.fallbackEvaluation(result, criteria));
-      
+
       return {
         passed: allValid,
         score: allValid ? 6 : 2,
@@ -265,19 +265,19 @@ export const createCriteria = {
     expectedConfidenceRange: [3, 5],
     allowableVariance
   }),
-  
+
   falseInformation: (allowableVariance = 1): EvaluationCriteria => ({
     expectedBullshitLevelRange: [3, 5],
     expectedConfidenceRange: [3, 5],
     allowableVariance
   }),
-  
+
   ambiguousStatement: (allowableVariance = 1): EvaluationCriteria => ({
     expectedBullshitLevelRange: [1, 4],
     expectedConfidenceRange: [2, 5],
     allowableVariance
   }),
-  
+
   withExternalSources: (allowableVariance = 1): EvaluationCriteria => ({
     shouldContainExternalSources: true,
     allowableVariance
