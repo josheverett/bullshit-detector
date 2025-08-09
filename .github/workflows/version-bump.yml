@@ -1,0 +1,83 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      pre-release:
+        description: 'Create pre-release version'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm run test
+      working-directory: ./packages/bullshit-detector
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GOOGLE_FACT_CHECK_API_KEY: ${{ secrets.GOOGLE_FACT_CHECK_API_KEY }}
+
+    - name: Bump version (pre-release)
+      if: github.event.inputs.pre-release == 'true'
+      run: npm version pre${{ github.event.inputs.version-type }} --preid=beta
+      working-directory: ./packages/bullshit-detector
+
+    - name: Bump version (release)
+      if: github.event.inputs.pre-release != 'true'
+      run: npm version ${{ github.event.inputs.version-type }}
+      working-directory: ./packages/bullshit-detector
+
+    - name: Get new version
+      id: version
+      run: echo "version=$(node -p "require('./packages/bullshit-detector/package.json').version")" >> $GITHUB_OUTPUT
+
+    - name: Update CHANGELOG
+      run: |
+        NEW_VERSION="${{ steps.version.outputs.version }}"
+        DATE=$(date '+%Y-%m-%d')
+        sed -i "/## \[Unreleased\]/a\\
+        \\
+        ## [$NEW_VERSION] - $DATE" CHANGELOG.md
+
+    - name: Commit changes
+      run: |
+        git add .
+        git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+        git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
+
+    - name: Push changes and tags
+      run: |
+        git push origin main
+        git push origin "v${{ steps.version.outputs.version }}"
