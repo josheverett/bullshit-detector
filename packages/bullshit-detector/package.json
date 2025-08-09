@@ -28,7 +28,13 @@
     "fact-checking",
     "ai",
     "bullshit-detection",
-    "misinformation"
+    "misinformation",
+    "disinformation",
+    "verification",
+    "openai",
+    "llm",
+    "typescript",
+    "nodejs"
   ],
   "author": "Josh Everett",
   "license": "MIT",
