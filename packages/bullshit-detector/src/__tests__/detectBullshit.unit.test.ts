@@ -18,7 +18,10 @@ vi.mock('openai', () => {
 describe('detectBullshit - Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.OPENAI_API_KEY = 'test-api-key';
+    // Only set test API key if real one isn't present
+    if (!process.env.OPENAI_API_KEY) {
+      process.env.OPENAI_API_KEY = 'test-api-key';
+    }
   });
 
   describe('String input tests', () => {
