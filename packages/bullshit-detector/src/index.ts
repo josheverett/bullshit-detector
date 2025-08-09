@@ -157,7 +157,7 @@ interface WikipediaSearchResult {
   confidence: number;
 }
 
-async function checkWithGoogleFactCheck(claim: string, config: GoogleFactCheckConfig): Promise<GoogleFactCheckResult[]> {
+export async function checkWithGoogleFactCheck(claim: string, config: GoogleFactCheckConfig): Promise<GoogleFactCheckResult[]> {
   const maxResults = config.maxResults || 5;
   const url = `https://factchecktools.googleapis.com/v1alpha1/claims:search`;
   const params = new URLSearchParams({
@@ -180,7 +180,7 @@ async function checkWithGoogleFactCheck(claim: string, config: GoogleFactCheckCo
   }
 }
 
-async function checkWithClaimBuster(claim: string, config: ClaimBusterConfig): Promise<ClaimBusterResult | null> {
+export async function checkWithClaimBuster(claim: string, config: ClaimBusterConfig): Promise<ClaimBusterResult | null> {
   const url = 'https://idir.uta.edu/claimbuster/api/v2/score/text';
 
   try {
@@ -208,7 +208,7 @@ async function checkWithClaimBuster(claim: string, config: ClaimBusterConfig): P
   }
 }
 
-async function searchWikipedia(claim: string, config: WikipediaConfig): Promise<WikipediaSearchResult[]> {
+export async function searchWikipedia(claim: string, config: WikipediaConfig): Promise<WikipediaSearchResult[]> {
   const language = config.language || 'en';
   const maxResults = config.maxResults || 3;
   const url = `https://${language}.wikipedia.org/w/api.php`;
@@ -231,11 +231,11 @@ async function searchWikipedia(claim: string, config: WikipediaConfig): Promise<
     const data = await response.json();
     const results = (data as any).query?.search || [];
 
-    return results.map((result: any) => ({
+    return results.map((result: any, index: number) => ({
       title: result.title,
       snippet: result.snippet.replace(/<[^>]*>/g, ''), // Remove HTML tags
       url: `https://${language}.wikipedia.org/wiki/${encodeURIComponent(result.title)}`,
-      confidence: Math.min(result.score / 100, 1) // Normalize score to 0-1
+      confidence: Math.max(0.9 - (index * 0.1), 0.1) // Higher confidence for earlier results
     }));
   } catch (error) {
     console.warn('Wikipedia API failed:', error instanceof Error ? error.message : 'Unknown error');
