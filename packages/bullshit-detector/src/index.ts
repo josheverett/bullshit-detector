@@ -1,6 +1,6 @@
 /**
  * @josheverett/bullshit-detector
- * 
+ *
  * Generic fact-checking and bullshit detection for any Node.js project requiring LLM-based analysis.
  * Uses OpenAI for single-call fact extraction and evaluation.
  */
@@ -19,7 +19,7 @@ export interface BullshitDetectionResult {
   confidence: number; // 0-5 scale confidence in the evaluation
   reasoning: string;
   truth: string; // The actual facts or corrected information
-  
+
   // Optional external fact-checking data (when external APIs are enabled)
   externalSources?: Array<{
     source: string;
@@ -28,7 +28,7 @@ export interface BullshitDetectionResult {
     confidence?: number;
     summary?: string;
   }>;
-  
+
   // Hybrid detection metadata
   detectionMethod?: 'llm_only' | 'llm_with_api_enhancement' | 'api_first_with_llm_fallback';
 }
@@ -57,14 +57,14 @@ export interface BullshitDetectionConfig {
   model?: string; // OpenAI model to use (defaults to 'gpt-4o-mini')
   temperature?: number; // Temperature for LLM calls (defaults to 0.1)
   maxTokens?: number; // Maximum tokens in response (defaults to 1500)
-  
+
   // External fact-checking APIs (all disabled by default)
   factCheckAPIs?: {
     googleFactCheck?: FactCheckAPI & { config?: GoogleFactCheckConfig };
     claimBuster?: FactCheckAPI & { config?: ClaimBusterConfig };
     wikipedia?: FactCheckAPI & { config?: WikipediaConfig };
   };
-  
+
   // Strategy for combining results
   hybridStrategy?: 'llm_only' | 'api_first' | 'api_enhanced'; // defaults to 'llm_only'
 }
@@ -92,7 +92,7 @@ Return only valid JSON array matching this structure:
 [
   {
     "transcript": "The full input text",
-    "claim": "The specific factual statement being evaluated", 
+    "claim": "The specific factual statement being evaluated",
     "summary": "A concise summary of the input",
     "bullshitLevel": 0-5,
     "confidence": 0-5,
@@ -106,7 +106,7 @@ const MESSAGES_SYSTEM_PROMPT = `You are a fact-checking AI that analyzes convers
 Your task:
 1. Look at the conversation context, focusing on the most recent user message
 2. Identify ALL factual claims in the latest user message (objective, verifiable statements)
-3. Evaluate the accuracy of each claim using your knowledge  
+3. Evaluate the accuracy of each claim using your knowledge
 4. Return a JSON array with one object per factual claim
 
 Rules:
@@ -121,7 +121,7 @@ Return only valid JSON array matching this structure:
   {
     "transcript": "The most recent user message content",
     "claim": "The specific factual statement being evaluated",
-    "summary": "A concise summary of the most recent user message", 
+    "summary": "A concise summary of the most recent user message",
     "bullshitLevel": 0-5,
     "confidence": 0-5,
     "reasoning": "Brief explanation of why this bullshit level was assigned",
@@ -171,9 +171,9 @@ async function checkWithGoogleFactCheck(claim: string, config: GoogleFactCheckCo
     if (!response.ok) {
       throw new Error(`Google Fact Check API error: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    return data.claims || [];
+    return (data as any).claims || [];
   } catch (error) {
     console.warn('Google Fact Check API failed:', error instanceof Error ? error.message : 'Unknown error');
     return [];
@@ -182,7 +182,7 @@ async function checkWithGoogleFactCheck(claim: string, config: GoogleFactCheckCo
 
 async function checkWithClaimBuster(claim: string, config: ClaimBusterConfig): Promise<ClaimBusterResult | null> {
   const url = 'https://idir.uta.edu/claimbuster/api/v2/score/text';
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -192,14 +192,14 @@ async function checkWithClaimBuster(claim: string, config: ClaimBusterConfig): P
       },
       body: JSON.stringify({ input_text: claim })
     });
-    
+
     if (!response.ok) {
       throw new Error(`ClaimBuster API error: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return {
-      score: data.score || 0,
+      score: (data as any).score || 0,
       claim: claim
     };
   } catch (error) {
@@ -212,7 +212,7 @@ async function searchWikipedia(claim: string, config: WikipediaConfig): Promise<
   const language = config.language || 'en';
   const maxResults = config.maxResults || 3;
   const url = `https://${language}.wikipedia.org/w/api.php`;
-  
+
   const params = new URLSearchParams({
     action: 'query',
     list: 'search',
@@ -227,10 +227,10 @@ async function searchWikipedia(claim: string, config: WikipediaConfig): Promise<
     if (!response.ok) {
       throw new Error(`Wikipedia API error: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    const results = data.query?.search || [];
-    
+    const results = (data as any).query?.search || [];
+
     return results.map((result: any) => ({
       title: result.title,
       snippet: result.snippet.replace(/<[^>]*>/g, ''), // Remove HTML tags
@@ -260,7 +260,7 @@ async function enhanceWithExternalAPIs(claim: string, config: BullshitDetectionC
     confidence?: number;
     summary?: string;
   }> = [];
-  
+
   let totalConfidence = 0;
   let sourceCount = 0;
 
@@ -417,28 +417,28 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
     // Enhance with external APIs if enabled and strategy requires it
     if (hybridStrategy !== 'llm_only' && results.length > 0) {
       const enhancedResults: BullshitDetectionResult[] = [];
-      
+
       for (const result of results) {
         try {
           const enhancement = await enhanceWithExternalAPIs(result.claim, config);
-          
+
           let finalResult = { ...result };
-          
+
           // Add external sources
           if (enhancement.externalSources.length > 0) {
             finalResult.externalSources = enhancement.externalSources;
           }
-          
+
           // Adjust confidence and bullshit level based on strategy
           if (hybridStrategy === 'api_enhanced' && enhancement.aggregatedConfidence > 0) {
             // Use external sources to enhance LLM confidence
             const externalWeight = 0.3; // External APIs contribute 30% to final confidence
             const llmWeight = 0.7;
-            
-            finalResult.confidence = Math.min(5, 
+
+            finalResult.confidence = Math.min(5,
               (finalResult.confidence * llmWeight) + (enhancement.aggregatedConfidence * 5 * externalWeight)
             );
-            
+
             // If external sources strongly disagree with LLM, adjust reasoning
             if (enhancement.externalSources.some(source => source.rating?.toLowerCase().includes('false') || source.rating?.toLowerCase().includes('misleading'))) {
               if (finalResult.bullshitLevel < 3) {
@@ -446,18 +446,18 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
                 finalResult.bullshitLevel = Math.min(5, finalResult.bullshitLevel + 1);
               }
             }
-            
+
             finalResult.detectionMethod = 'llm_with_api_enhancement';
           } else if (hybridStrategy === 'api_first') {
             // TODO: Could implement API-first strategy in future if needed
             finalResult.detectionMethod = 'llm_with_api_enhancement';
           }
-          
+
           // If no enhancement method was set, default to LLM only
           if (!finalResult.detectionMethod) {
             finalResult.detectionMethod = 'llm_only';
           }
-          
+
           enhancedResults.push(finalResult);
         } catch (enhancementError) {
           // If enhancement fails, fall back to LLM-only result
@@ -468,7 +468,7 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
           });
         }
       }
-      
+
       return enhancedResults;
     }
 
