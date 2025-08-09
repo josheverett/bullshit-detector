@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { detectBullshit, OpenAIMessage, BullshitDetectionResult, BullshitDetectionConfig } from '../index';
+import { detectBullshit, OpenAIMessage, BullshitDetectionConfig } from '../index';
 
 // Mock OpenAI
 const mockCreate = vi.fn();

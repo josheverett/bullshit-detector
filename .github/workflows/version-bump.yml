@@ -44,7 +44,6 @@ jobs:
 
     - name: Run tests
       run: npm run test
-      working-directory: ./packages/bullshit-detector
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GOOGLE_FACT_CHECK_API_KEY: ${{ secrets.GOOGLE_FACT_CHECK_API_KEY }}
@@ -52,16 +51,14 @@ jobs:
     - name: Bump version (pre-release)
       if: github.event.inputs.pre-release == 'true'
       run: npm version pre${{ github.event.inputs.version-type }} --preid=beta
-      working-directory: ./packages/bullshit-detector
 
     - name: Bump version (release)
       if: github.event.inputs.pre-release != 'true'
       run: npm version ${{ github.event.inputs.version-type }}
-      working-directory: ./packages/bullshit-detector
 
     - name: Get new version
       id: version
-      run: echo "version=$(node -p "require('./packages/bullshit-detector/package.json').version")" >> $GITHUB_OUTPUT
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
     - name: Update CHANGELOG
       run: |

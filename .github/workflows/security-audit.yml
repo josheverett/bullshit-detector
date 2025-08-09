@@ -24,4 +24,3 @@ jobs:
 
     - name: Check for vulnerabilities in package
       run: npm audit --audit-level=high
-      working-directory: ./packages/bullshit-detector
