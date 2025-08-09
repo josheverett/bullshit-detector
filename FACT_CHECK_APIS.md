@@ -120,7 +120,7 @@ interface BullshitDetectionResult {
   confidence: number; // 0-5 scale
   reasoning: string;
   truth: string;
-  
+
   // Enhanced fields (when external APIs enabled)
   externalSources?: Array<{
     source: string;        // e.g., "Google Fact Check - PolitiFact"
@@ -129,7 +129,7 @@ interface BullshitDetectionResult {
     confidence?: number;   // 0-1 confidence from this source
     summary?: string;      // Brief summary from this source
   }>;
-  
+
   detectionMethod?: 'llm_only' | 'llm_with_api_enhancement' | 'api_first_with_llm_fallback';
 }
 ```
@@ -150,7 +150,7 @@ interface BullshitDetectionResult {
 
 ## Demo Usage
 
-For hackathon demos, you can enable Wikipedia search without any API keys:
+For quick testing or demos, you can enable Wikipedia search without any API keys:
 
 ```typescript
 const demoConfig: BullshitDetectionConfig = {
