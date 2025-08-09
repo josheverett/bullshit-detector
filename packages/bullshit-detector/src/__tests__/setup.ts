@@ -4,5 +4,7 @@ import { vi } from 'vitest';
 // Set a default timeout for tests
 vi.setConfig({ testTimeout: 30000 });
 
-// Mock environment variables for tests
-process.env.OPENAI_API_KEY = 'test-api-key';
+// Set default test API keys only if real ones aren't present
+if (!process.env.OPENAI_API_KEY) {
+  process.env.OPENAI_API_KEY = 'test-api-key';
+}
