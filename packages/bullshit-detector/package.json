@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "test:run": "vitest run",
     "lint": "eslint src/**/*.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepack": "npm run build"
   },
   "keywords": [
     "fact-checking",
@@ -52,5 +53,11 @@
   "homepage": "https://github.com/josheverett/bullshit-detector#readme",
   "bugs": {
     "url": "https://github.com/josheverett/bullshit-detector/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
