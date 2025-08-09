@@ -6,7 +6,7 @@ on:
       dry-run:
         description: 'Perform a dry run (do not actually publish)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:
@@ -28,29 +28,24 @@ jobs:
 
     - name: Build package
       run: npm run build
-      working-directory: ./packages/bullshit-detector
 
     - name: Run tests
       run: npm run test
-      working-directory: ./packages/bullshit-detector
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GOOGLE_FACT_CHECK_API_KEY: ${{ secrets.GOOGLE_FACT_CHECK_API_KEY }}
 
     - name: Run lint
       run: npm run lint
-      working-directory: ./packages/bullshit-detector
 
     - name: Dry run publish
       if: github.event.inputs.dry-run == 'true'
       run: npm publish --dry-run
-      working-directory: ./packages/bullshit-detector
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Publish to npm
       if: github.event.inputs.dry-run != 'true'
       run: npm publish
-      working-directory: ./packages/bullshit-detector
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
