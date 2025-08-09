@@ -1,16 +1,68 @@
 {
-  "name": "claude-playground",
+  "name": "@josheverett/bullshit-detector",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "packages/*"
+  "description": "AI-powered fact-checking and bullshit detection for Node.js applications",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/**/*.ts",
+    "prepublishOnly": "npm run build",
+    "prepack": "npm run build"
   },
+  "keywords": [
+    "fact-checking",
+    "ai",
+    "bullshit-detection",
+    "misinformation",
+    "disinformation",
+    "verification",
+    "openai",
+    "llm",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "Josh Everett",
+  "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@tsconfig/node22": "^22.0.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "openai": "^4.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josheverett/bullshit-detector.git"
+  },
+  "homepage": "https://github.com/josheverett/bullshit-detector#readme",
+  "bugs": {
+    "url": "https://github.com/josheverett/bullshit-detector/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
