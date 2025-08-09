@@ -1,16 +1,15 @@
-import { jest } from '@jest/globals';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { detectBullshit, BullshitDetectionConfig } from '../index';
 
 // Mock fetch globally
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 // Mock OpenAI
-const mockCreate = jest.fn();
-jest.mock('openai', () => {
+const mockCreate = vi.fn();
+vi.mock('openai', () => {
   return {
-    __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
+    default: vi.fn().mockImplementation(() => ({
       chat: {
         completions: {
           create: mockCreate,
@@ -22,7 +21,7 @@ jest.mock('openai', () => {
 
 describe('External Fact-Checking APIs', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.OPENAI_API_KEY = 'test-api-key';
   });
 

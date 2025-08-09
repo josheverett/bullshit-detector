@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll } from 'vitest';
 import { detectBullshit, OpenAIMessage, BullshitDetector, BullshitDetectionConfig } from '../index';
 import { LLMEvaluator, createCriteria } from './llmEvaluator';
 
