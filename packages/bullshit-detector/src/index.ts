@@ -460,7 +460,7 @@ export async function detectBullshit(input: string | OpenAIMessage[], config: Bu
         } catch (enhancementError) {
           // If enhancement fails, fall back to LLM-only result with appropriate detection method
           console.warn('External API enhancement failed for claim:', result.claim, enhancementError);
-          let fallbackMethod: string;
+          let fallbackMethod: 'llm_only' | 'llm_with_api_enhancement' | 'api_first_with_llm_fallback';
           if (hybridStrategy === 'api_enhanced') {
             fallbackMethod = 'llm_with_api_enhancement';
           } else if (hybridStrategy === 'api_first') {
