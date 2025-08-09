@@ -1,12 +1,6 @@
 name: Bullshit Detector Unit Tests
 
 on:
-  # push:
-  #   branches: [ main ]
-  #   paths:
-  #     - 'packages/bullshit-detector/**'
-  #     - 'package.json'
-  #     - 'package-lock.json'
   workflow_dispatch:
     inputs:
       branch:
