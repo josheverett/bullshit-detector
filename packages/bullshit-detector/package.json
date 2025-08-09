@@ -46,7 +46,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/josheverett/claude-playground.git",
+    "url": "https://github.com/josheverett/bullshit-detector.git",
     "directory": "packages/bullshit-detector"
+  },
+  "homepage": "https://github.com/josheverett/bullshit-detector#readme",
+  "bugs": {
+    "url": "https://github.com/josheverett/bullshit-detector/issues"
   }
 }
