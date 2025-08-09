@@ -18,7 +18,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
       console.warn('LLM Evaluator initialization failed:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
-  
+
   describe('API-enhanced strategy', () => {
     it('should work with api_enhanced strategy (requires Google Fact Check API key)', async () => {
       // Skip if no Google Fact Check API key
@@ -45,7 +45,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'COVID-19 vaccines contain microchips.',
@@ -70,14 +70,14 @@ describe('Fact-checking APIs - Integration Tests', () => {
       // LLM Evaluator validation for API-enhanced results
       if (llmEvaluator) {
         const evaluation = await llmEvaluator.evaluateResults(
-          'COVID-19 vaccines contain microchips.', 
-          results, 
+          'COVID-19 vaccines contain microchips.',
+          results,
           createCriteria.falseInformation()
         );
-        
+
         console.log(`API-Enhanced LLM Evaluation - Score: ${evaluation.score}/10, Passed: ${evaluation.passed}`);
         console.log(`Reasoning: ${evaluation.reasoning}`);
-        
+
         expect(evaluation.score).toBeGreaterThanOrEqual(4);
         expect(evaluation.passed).toBe(true);
       }
@@ -108,7 +108,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'The Earth is flat.',
@@ -144,7 +144,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'Mount Everest is the tallest mountain on Earth.',
@@ -185,7 +185,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'The President signed a new healthcare bill yesterday.',
@@ -236,7 +236,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'Albert Einstein won the Nobel Prize in Physics in 1921.',
@@ -272,7 +272,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'The speed of light is approximately 299,792,458 meters per second.',
@@ -309,7 +309,7 @@ describe('Fact-checking APIs - Integration Tests', () => {
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
         transcript: 'Water freezes at 0 degrees Celsius.',
@@ -345,14 +345,14 @@ describe('Fact-checking APIs - Integration Tests', () => {
       };
 
       // Should not throw an error even if APIs fail
-      const results = await detectBullshit('Test claim for error handling.', config);
+      const results = await detectBullshit('Water boils at 100 degrees Celsius at sea level.', config);
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       const result = results[0];
       expect(result).toMatchObject({
-        transcript: 'Test claim for error handling.',
+        transcript: 'Water boils at 100 degrees Celsius at sea level.',
         claim: expect.any(String),
         bullshitLevel: expect.any(Number),
         confidence: expect.any(Number),

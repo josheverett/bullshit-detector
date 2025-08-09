@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:run": "vitest run",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build"

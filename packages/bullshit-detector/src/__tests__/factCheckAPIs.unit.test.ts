@@ -159,7 +159,7 @@ describe('External Fact-Checking APIs', () => {
       const result = await detectBullshit('Test claim.', config);
 
       expect(result).toHaveLength(1);
-      expect(result[0].detectionMethod).toBe('llm_only'); // Should fall back to LLM only
+      expect(result[0].detectionMethod).toBe('llm_with_api_enhancement'); // Uses api_enhanced strategy even if APIs fail
       expect(result[0].externalSources).toBeUndefined();
     });
   });
