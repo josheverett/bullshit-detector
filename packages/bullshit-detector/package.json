@@ -25,16 +25,16 @@
   "devDependencies": {
     "@jest/globals": "^29.0.0",
     "@tsconfig/node22": "^22.0.0",
-    "@tsconfig/node-ts": "^1.0.4",
+    "@tsconfig/node-ts": "^23.6.1",
     "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
     "jest": "^29.0.0",
     "jest-environment-node": "^29.0.0",
     "ts-jest": "^29.0.0",
-    "typescript": "5.9.2"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "openai": "^4.0.0",
