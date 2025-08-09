@@ -2,8 +2,15 @@
   "name": "@josheverett/bullshit-detector",
   "version": "1.0.0",
   "description": "AI-powered fact-checking and bullshit detection for Node.js applications",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
